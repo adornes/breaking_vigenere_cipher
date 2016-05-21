@@ -3,6 +3,6 @@ breaking_vigenere_cipher
 
 Algorithm for breaking Vigenère Cipher
 
-This is an algorithm written in Ruby for breaking Vigenère Cipher. Further explanation can be found at my blog in Portuguese: informatabrasileiro.blogspot.com.br
+This is an algorithm written in Ruby for breaking Vigenère Cipher.
 
-Please, feel free to suggest refactorings, fixes, etc.
+Please, feel free to suggest code improvements, fixes, etc.

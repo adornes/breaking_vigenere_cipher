@@ -1,5 +1,3 @@
-require "./constants.rb"
-
 #
 # Author: Daniel Adornes
 # Date: 03/30/2013
@@ -9,6 +7,9 @@ class CodeBreaker
 
   attr_accessor(:cipher_text, :key_length, :key)
 
+  def initialize(cipher_text)
+    self.cipher_text = cipher_text
+  end
 
   def decrypt
     
@@ -25,6 +26,7 @@ class CodeBreaker
 
   private
 
+  @@ALPHABET = "abcdefghijklmnopqrstuvwxyz"
 
   def find_key_length
 
@@ -65,7 +67,7 @@ class CodeBreaker
       end
     end
 
-    raise "Key length not found!"
+    raise "Failed to find key length!"
   end
 
   
@@ -75,7 +77,7 @@ class CodeBreaker
 
     # Chooses 'e' char as the base char for frequency analysis
     base_char_for_frequency_analysis = 'e'
-    idx_base_char = Constants.ALPHABET.index(base_char_for_frequency_analysis)
+    idx_base_char = @@ALPHABET.index(base_char_for_frequency_analysis)
     
     # Iterates up to the key length
     (0...@key_length).each do |key_position|
@@ -87,17 +89,12 @@ class CodeBreaker
       encrypted_e = find_more_frequent_char( cipher_text_slice )
       
       # Stores the key char index
-      @key[key_position] = (Constants.ALPHABET.index(encrypted_e) - idx_base_char + Constants.ALPHABET.length) % Constants.ALPHABET.length
+      @key[key_position] = (@@ALPHABET.index(encrypted_e) - idx_base_char + @@ALPHABET.length) % @@ALPHABET.length
               
     end
     
     # Output the Key
-
-    str_key = String.new
-    (0...@key_length).each do |key_idx|
-      str_key << Constants.ALPHABET[@key[key_idx]]
-    end
-    
+    str_key = @key.map{|i| @@ALPHABET[i]}.join
     puts "Key found: #{str_key}"
     
     @key
@@ -113,13 +110,13 @@ class CodeBreaker
       idx_key = @key[i % @key.length]
 
       # Finds the cipher char index
-      idx_cipher_char = Constants.ALPHABET.index(@cipher_text[i])
+      idx_cipher_char = @@ALPHABET.index(@cipher_text[i])
 
       # Finds the plain text char index
-      idx_plain = (idx_cipher_char - idx_key + Constants.ALPHABET.length) % Constants.ALPHABET.length
+      idx_plain = (idx_cipher_char - idx_key + @@ALPHABET.length) % @@ALPHABET.length
       
       # Append the plain text char to plain text variable
-      plain_text << Constants.ALPHABET[idx_plain]
+      plain_text << @@ALPHABET[idx_plain]
     end
     
     plain_text
@@ -147,13 +144,11 @@ class CodeBreaker
     idx = 0
     while idx < occurrencies do
       position = @cipher_text.index(block, position)
-      if position then
-        idx_occurrencies[idx] = position
-        idx += 1
-        position += 1
-      else
-        break
-      end                    
+      break unless position
+      
+      idx_occurrencies[idx] = position
+      idx += 1
+      position += 1          
     end
 
     idx_occurrencies
@@ -172,27 +167,11 @@ class CodeBreaker
 
 
   def find_more_frequent_char( cipher_text_slice )
-    char_occurrences = Hash.new
-      
-    (0...cipher_text_slice.length).each do |i|
-      character = cipher_text_slice[i]
-      
-      c = char_occurrences.include?(character) ? char_occurrences[character] + 1 : 1
-      char_occurrences[character] = c
-    end
-    
-    more_frequent = 0
-    encrypted_e = 0
+    # Count frequency of each character in the cipher text slice
+    char_freqs = cipher_text_slice.chars.to_a.inject(Hash.new(0)) { |f, c| f[c] += 1 ; f }
     
     # Finds the more frequent char in the current cipher text slice
     # in order to infer the 'e' correspondent encrypted char
-    char_occurrences.each_pair do |character, frequency|
-      if frequency > more_frequent
-        more_frequent = char_occurrences[character]
-        encrypted_e = character
-      end
-    end
-
-    encrypted_e
+    char_freqs.max_by{|ch, freq| freq }.first
   end
 end
